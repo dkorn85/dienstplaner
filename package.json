@@ -1,0 +1,9 @@
+{
+  "name": "dienstplaner",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/time.test.mjs",
+    "serve": "python3 -m http.server 8000"
+  }
+}

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Dienstplaner</title>
+  <meta name="theme-color" content="#0b1020">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="./css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.2.0/dist/signature_pad.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Login / Registrierung -->
+  <div id="view-login" class="login hidden">
+    <img class="login-logo" src="./icons/logo.svg" alt="">
+    <h1>Dienstplaner</h1>
+    <p class="login-sub">Zeitarbeit&nbsp;· Einsätze&nbsp;· Stunden</p>
+    <form id="login-form" class="card">
+      <label>E-Mail
+        <input type="email" id="login-email" autocomplete="username" required>
+      </label>
+      <label>Passwort
+        <input type="password" id="login-pass" autocomplete="current-password" required>
+      </label>
+      <button type="submit" class="btn btn-primary" id="login-btn">Anmelden</button>
+      <p id="login-msg" class="form-msg"></p>
+    </form>
+    <form id="setup-form" class="card hidden">
+      <h2>Einmalige Registrierung</h2>
+      <label>E-Mail
+        <input type="email" id="setup-email" value="dkorn85@gmail.com" required>
+      </label>
+      <label>Passwort (min. 8 Zeichen)
+        <input type="password" id="setup-pass" autocomplete="new-password" minlength="8" required>
+      </label>
+      <button type="submit" class="btn btn-primary" id="setup-btn">Registrieren</button>
+      <p id="setup-msg" class="form-msg"></p>
+    </form>
+  </div>
+
+  <!-- App -->
+  <div id="app" class="hidden">
+    <main id="view"></main>
+    <nav class="bottomnav">
+      <a href="#kalender" data-view="kalender">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>
+        <span>Kalender</span>
+      </a>
+      <a href="#export" data-view="export">
+        <svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><line x1="9" y1="14" x2="15" y2="14"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+        <span>Nachweis</span>
+      </a>
+      <a href="#orte" data-view="orte">
+        <svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 11-8 11s-8-5-8-11a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>Orte</span>
+      </a>
+      <a href="#einstellungen" data-view="einstellungen">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.09a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+        <span>Mehr</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Bottom-Sheet + Backdrop (Inhalt wird von JS gefüllt) -->
+  <div id="backdrop" class="hidden"></div>
+  <div id="sheet" class="hidden"></div>
+
+  <!-- Signatur-Pad -->
+  <div id="sigmodal" class="hidden">
+    <div class="sig-box">
+      <p id="sig-title">Unterschrift</p>
+      <canvas id="sig-canvas"></canvas>
+      <div class="sig-actions">
+        <button class="btn" id="sig-clear">Leeren</button>
+        <button class="btn" id="sig-cancel">Abbrechen</button>
+        <button class="btn btn-primary" id="sig-ok">Übernehmen</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="hidden"></div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
