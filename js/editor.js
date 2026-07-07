@@ -1,13 +1,14 @@
 // Dienst-Editor im Bottom-Sheet. openDay() zeigt bei mehreren Diensten erst eine Tagesliste.
 import { store, saveDienst, deleteDienst } from './api.js';
-import { nettoMinuten, fmtStundenDE, fmtDatumDE, toMin, WOCHENTAGE, wochentagIndex } from './time.js';
+import { nettoMinuten, fmtStundenDE, fmtDatumDE, toMin, WOCHENTAGE, wochentagIndex, feiertag } from './time.js';
 import { openSheet, closeSheet, toast, esc } from './ui.js';
 
 export function openDay(datum, onChange) {
   const dienste = store.dienste.filter((d) => d.datum === datum);
   if (dienste.length === 0) return openForm(null, datum, onChange);
 
-  const titel = `${WOCHENTAGE[wochentagIndex(datum)]}, ${fmtDatumDE(datum)}`;
+  const ft = feiertag(datum);
+  const titel = `${WOCHENTAGE[wochentagIndex(datum)]}, ${fmtDatumDE(datum)}${ft ? ` · ${ft}` : ''}`;
   const items = dienste.map((d) => {
     const ort = store.orte.find((o) => o.id === d.ort_id);
     return `
@@ -33,7 +34,10 @@ export function openDay(datum, onChange) {
   el.querySelector('#day-neu').onclick = () => openForm(null, datum, onChange);
 }
 
-export function openForm(dienst, datum, onChange) {
+// datumArg: einzelner Datums-String oder Array (Serie: ein Dienst für jeden Tag)
+export function openForm(dienst, datumArg, onChange) {
+  const daten = Array.isArray(datumArg) ? datumArg : [datumArg];
+  const serie = daten.length > 1;
   const neu = !dienst;
   const orte = store.orte.filter((o) => o.aktiv || o.id === dienst?.ort_id);
   if (orte.length === 0) { toast('Bitte zuerst einen Einsatzort anlegen'); return; }
@@ -41,8 +45,12 @@ export function openForm(dienst, datum, onChange) {
   const options = orte.map((o) =>
     `<option value="${o.id}" ${o.id === dienst?.ort_id ? 'selected' : ''}>${esc(o.name)}</option>`).join('');
 
+  const titel = serie
+    ? `Neue Serie · ${daten.length} Tage <small style="color:var(--muted);font-weight:500">(${fmtDatumDE(daten[0])} – ${fmtDatumDE(daten[daten.length - 1])})</small>`
+    : `${neu ? 'Neuer Dienst' : 'Dienst bearbeiten'} · ${fmtDatumDE(daten[0])}`;
+
   const el = openSheet(`
-    <h2>${neu ? 'Neuer Dienst' : 'Dienst bearbeiten'} · ${fmtDatumDE(datum)}</h2>
+    <h2>${titel}</h2>
     <label>Einsatzort
       <select id="f-ort">${options}</select>
     </label>
@@ -58,7 +66,7 @@ export function openForm(dienst, datum, onChange) {
     <div class="sheet-actions">
       ${neu ? '' : '<button class="btn btn-danger" id="f-del">Löschen</button>'}
       <button class="btn" id="f-abbr">Abbrechen</button>
-      <button class="btn btn-primary" id="f-save">Speichern</button>
+      <button class="btn btn-primary" id="f-save">${serie ? `${daten.length}× speichern` : 'Speichern'}</button>
     </div>`);
 
   const $ = (id) => el.querySelector(id);
@@ -107,10 +115,13 @@ export function openForm(dienst, datum, onChange) {
     const p = Number(pause.value || 0);
     if (nettoMinuten(von.value, bis.value, p) <= 0) return toast('Pause ist länger als der Dienst');
     try {
-      await saveDienst({
-        id: dienst?.id, datum, von: von.value, bis: bis.value, pause: p,
-        ort_id: ortSel.value, zusammenfassung: $('#f-notiz').value.trim(),
-      });
+      for (const dt of daten) {
+        await saveDienst({
+          id: dienst?.id, datum: dt, von: von.value, bis: bis.value, pause: p,
+          ort_id: ortSel.value, zusammenfassung: $('#f-notiz').value.trim(),
+        });
+      }
+      if (serie) toast(`${daten.length} Dienste eingetragen`);
       closeSheet(); onChange();
     } catch (e) { toast(e.message); }
   };

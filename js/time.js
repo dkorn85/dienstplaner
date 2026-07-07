@@ -65,6 +65,47 @@ export function weeksInIsoYear(isoJahr) {
   return isoWeek(`${isoJahr}-12-28`).kw;
 }
 
+// Ostersonntag nach der anonymen Gauß-Ergänzung (gregorianisch)
+export function ostersonntag(jahr) {
+  const a = jahr % 19, b = Math.floor(jahr / 100), c = jahr % 100;
+  const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const monat = Math.floor((h + l - 7 * m + 114) / 31);
+  const tag = ((h + l - 7 * m + 114) % 31) + 1;
+  return `${jahr}-${pad(monat)}-${pad(tag)}`;
+}
+
+const ftCache = new Map();
+
+// Gesetzliche Feiertage in NRW: Datum-String → Name
+export function feiertageNRW(jahr) {
+  if (ftCache.has(jahr)) return ftCache.get(jahr);
+  const os = ostersonntag(jahr);
+  const ft = {
+    [`${jahr}-01-01`]: 'Neujahr',
+    [addDays(os, -2)]: 'Karfreitag',
+    [addDays(os, 1)]: 'Ostermontag',
+    [`${jahr}-05-01`]: 'Tag der Arbeit',
+    [addDays(os, 39)]: 'Christi Himmelfahrt',
+    [addDays(os, 50)]: 'Pfingstmontag',
+    [addDays(os, 60)]: 'Fronleichnam',
+    [`${jahr}-10-03`]: 'Tag der Deutschen Einheit',
+    [`${jahr}-11-01`]: 'Allerheiligen',
+    [`${jahr}-12-25`]: '1. Weihnachtstag',
+    [`${jahr}-12-26`]: '2. Weihnachtstag',
+  };
+  ftCache.set(jahr, ft);
+  return ft;
+}
+
+// Feiertagsname für ein Datum oder null
+export function feiertag(datum) {
+  return feiertageNRW(Number(datum.slice(0, 4)))[datum] || null;
+}
+
 export function todayStr() {
   const d = new Date();
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;

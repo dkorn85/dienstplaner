@@ -1,16 +1,19 @@
-// Monatsansicht: Hero (Ist-Stunden + Regenbogen-Fortschritt Richtung Soll) + Kalender-Grid.
+// Monatsansicht: Hero (Ist-Stunden + Regenbogen-Fortschritt Richtung Soll) + Kalender-Grid
+// mit NRW-Feiertagen und Serien-Auswahl (mehrere Tage → ein Dienst für alle).
 import { store, sollFuer } from './api.js';
 import {
   WOCHENTAGE_KURZ, MONATE, nettoMinuten, fmtStundenDE, fmtStundenKurz,
-  daysInMonth, todayStr, isoWeek, wochentagIndex,
+  daysInMonth, todayStr, isoWeek, wochentagIndex, feiertag,
 } from './time.js';
-import { openDay } from './editor.js';
+import { openDay, openForm } from './editor.js';
 import { esc } from './ui.js';
 
 const heute = () => todayStr();
 let jahr = Number(heute().slice(0, 4));
 let monat = Number(heute().slice(5, 7)); // 1-basiert
 let slide = '';                          // Richtung des Monatswechsels für die Animation
+let auswahl = null;                      // Set von Datums-Strings, wenn Serien-Auswahl aktiv
+                                         // (bleibt über Monatswechsel erhalten — Blöcke über Monatsgrenzen)
 
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -47,8 +50,12 @@ export function renderCalendar(el) {
       const ort = store.orte.find((o) => o.id === d.ort_id);
       return `<div class="chip" style="--chip-farbe:${esc(ort?.farbe || '#999')}">${esc(ort?.kurz || '?')}&hairsp;<small>${fmtStundenKurz(nettoMinuten(d.von, d.bis, d.pause))}</small></div>`;
     }).join('');
-    const today = datum === heute() ? ' today' : '';
-    return `<div class="day${today}" data-datum="${datum}"><div class="num">${tag}</div>${chips}</div>`;
+    const ft = feiertag(datum);
+    const klassen = ['day'];
+    if (datum === heute()) klassen.push('today');
+    if (auswahl?.has(datum)) klassen.push('selected');
+    return `<div class="${klassen.join(' ')}" data-datum="${datum}"${ft ? ` title="${esc(ft)}"` : ''}>
+      <div class="num${ft ? ' ft' : ''}">${tag}</div>${chips}</div>`;
   };
 
   let cells = '';
@@ -68,6 +75,17 @@ export function renderCalendar(el) {
     ? `noch <b>${fmtStundenDE(diffMin)} h</b> bis Soll ${fmtStundenKurz(sollMin)} h`
     : `<span class="ok">Soll erfüllt</span> · +${fmtStundenDE(-diffMin)} h über ${fmtStundenKurz(sollMin)} h`;
 
+  const anzahlText = (n) => `${n} ${n === 1 ? 'Tag' : 'Tage'} gewählt`;
+  const tools = auswahl
+    ? `<div class="cal-tools">
+        <span class="serie-count" id="serie-count">${anzahlText(auswahl.size)}</span>
+        <button class="btn btn-mini" id="serie-abbr">Abbrechen</button>
+        <button class="btn btn-mini btn-primary" id="serie-weiter" ${auswahl.size ? '' : 'disabled'}>Eintragen</button>
+      </div>`
+    : `<div class="cal-tools">
+        <button class="btn btn-mini" id="serie-toggle">▦ Mehrere Tage</button>
+      </div>`;
+
   el.innerHTML = `
     <div class="month-head">
       <button class="btn" id="cal-prev" aria-label="Voriger Monat">‹</button>
@@ -80,6 +98,7 @@ export function renderCalendar(el) {
       <div class="bar"><i id="hero-bar"></i></div>
       <div class="hero-sub">${sub}</div>
     </section>
+    ${tools}
     <div class="cal ${slide}">
       <div class="kw"></div>
       ${WOCHENTAGE_KURZ.map((t) => `<div class="dow">${t}</div>`).join('')}
@@ -93,7 +112,29 @@ export function renderCalendar(el) {
   slide = '';
   el.querySelector('#cal-prev').onclick = () => { monat--; if (monat < 1) { monat = 12; jahr--; } slide = 'slide-r'; renderCalendar(el); };
   el.querySelector('#cal-next').onclick = () => { monat++; if (monat > 12) { monat = 1; jahr++; } slide = 'slide-l'; renderCalendar(el); };
+
+  if (auswahl) {
+    el.querySelector('#serie-abbr').onclick = () => { auswahl = null; renderCalendar(el); };
+    el.querySelector('#serie-weiter').onclick = () => {
+      const daten = [...auswahl].sort();
+      openForm(null, daten, () => { auswahl = null; renderCalendar(el); });
+    };
+  } else {
+    el.querySelector('#serie-toggle').onclick = () => { auswahl = new Set(); renderCalendar(el); };
+  }
+
   el.querySelectorAll('.day[data-datum]').forEach((d) => {
-    d.onclick = () => openDay(d.dataset.datum, () => renderCalendar(el));
+    d.onclick = () => {
+      const datum = d.dataset.datum;
+      if (auswahl) {
+        // Auswahl togglen ohne Re-Render (sonst spielt der Hero-Count-up jedes Mal neu)
+        if (auswahl.has(datum)) { auswahl.delete(datum); d.classList.remove('selected'); }
+        else { auswahl.add(datum); d.classList.add('selected'); }
+        el.querySelector('#serie-count').textContent = anzahlText(auswahl.size);
+        el.querySelector('#serie-weiter').toggleAttribute('disabled', auswahl.size === 0);
+      } else {
+        openDay(datum, () => renderCalendar(el));
+      }
+    };
   });
 }

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   nettoMinuten, isoWeek, weekDates, weeksInIsoYear, addDays,
   wochentagIndex, fmtStundenDE, fmtStundenPDF, fmtStundenKurz, fmtDatumDE, daysInMonth,
+  ostersonntag, feiertag,
 } from '../js/time.js';
 
 // Netto-Vektoren aus den echten Arbeitszeitnachweisen
@@ -53,5 +54,16 @@ assert.equal(fmtStundenKurz(510), '8,5');
 assert.equal(fmtStundenKurz(495), '8,25');
 assert.equal(fmtStundenKurz(600), '10');
 assert.equal(fmtDatumDE('2026-07-03'), '03.07.2026');
+
+// Feiertage NRW
+assert.equal(ostersonntag(2024), '2024-03-31');
+assert.equal(ostersonntag(2025), '2025-04-20');
+assert.equal(ostersonntag(2026), '2026-04-05');
+assert.equal(feiertag('2026-04-03'), 'Karfreitag');
+assert.equal(feiertag('2026-05-25'), 'Pfingstmontag');
+assert.equal(feiertag('2026-06-04'), 'Fronleichnam');
+assert.equal(feiertag('2026-11-01'), 'Allerheiligen');
+assert.equal(feiertag('2026-10-31'), null);  // Reformationstag ist NICHT NRW
+assert.equal(feiertag('2026-07-04'), null);
 
 console.log('✓ alle time.js-Tests grün');
