@@ -88,6 +88,10 @@ export function fmtStundenPDF(min) { // 480 → '8.00' (wie die bisherigen Nachw
   return (min / 60).toFixed(2);
 }
 
+export function fmtStundenKurz(min) { // 480 → '8', 510 → '8,5', 495 → '8,25' (für enge Chips)
+  return (min / 60).toFixed(2).replace(/\.?0+$/, '').replace('.', ',');
+}
+
 export function fmtDatumDE(s) { // '2026-07-03' → '03.07.2026'
   const [y, m, d] = s.split('-');
   return `${d}.${m}.${y}`;

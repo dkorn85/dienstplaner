@@ -78,7 +78,7 @@ export function renderExport(el) {
       <button class="btn btn-primary" id="pdf-share" ${proOrt.size ? '' : 'disabled'}>PDF teilen</button>
       <button class="btn" id="pdf-save" ${proOrt.size ? '' : 'disabled'}>Herunterladen</button>
     </div>
-    <p style="color:var(--muted);font-size:0.8rem;text-align:center">
+    <p class="export-hint">
       Eine PDF · ${proOrt.size} Seite${proOrt.size === 1 ? '' : 'n'} · jede Einrichtung unterschreibt ihre eigene Seite
     </p>`;
 

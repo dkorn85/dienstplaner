@@ -15,15 +15,27 @@ const VIEWS = {
 
 const $ = (id) => document.getElementById(id);
 
+let aktuelleView = null;
+
 function route() {
   const name = location.hash.replace('#', '') || 'kalender';
   if (name === 'setup') return; // nur für den Login-Screen relevant
-  const render = VIEWS[name] || VIEWS.kalender;
+  const zielName = VIEWS[name] ? name : 'kalender';
+  const render = VIEWS[zielName];
   closeSheet();
   document.querySelectorAll('.bottomnav a').forEach((a) => {
-    a.classList.toggle('active', a.dataset.view === (VIEWS[name] ? name : 'kalender'));
+    a.classList.toggle('active', a.dataset.view === zielName);
   });
-  render($('view'));
+  const view = $('view');
+  const wechsel = aktuelleView !== null && aktuelleView !== zielName;
+  aktuelleView = zielName;
+  render(view);
+  if (wechsel && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    // Einwisch-Animation nur bei echtem Tab-Wechsel neu anstoßen
+    view.classList.remove('view-anim');
+    void view.offsetWidth;
+    view.classList.add('view-anim');
+  }
 }
 
 function zeigeLogin() {

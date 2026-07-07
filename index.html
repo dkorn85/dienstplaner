@@ -4,10 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Dienstplaner</title>
-  <meta name="theme-color" content="#0b1020">
+  <meta name="theme-color" content="#050506">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/icon-192.png">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&display=swap">
   <link rel="stylesheet" href="./css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
@@ -18,9 +21,9 @@
 
   <!-- Login / Registrierung -->
   <div id="view-login" class="login hidden">
-    <img class="login-logo" src="./icons/logo.svg" alt="">
-    <h1>Dienstplaner</h1>
-    <p class="login-sub">Zeitarbeit&nbsp;· Einsätze&nbsp;· Stunden</p>
+    <img class="login-logo" src="./icons/logo.svg" alt="KORN Logo">
+    <h1>KORN<sup>™</sup></h1>
+    <p class="login-sub">Kompetenz · Ohne · Regelmäßige · Nachtruhe</p>
     <form id="login-form" class="card">
       <label>E-Mail
         <input type="email" id="login-email" autocomplete="username" required>
@@ -42,6 +45,7 @@
       <button type="submit" class="btn btn-primary" id="setup-btn">Registrieren</button>
       <p id="setup-msg" class="form-msg"></p>
     </form>
+    <p class="login-legal">Ein Unternehmen der Dennis-Korn-Gruppe. Alle Nächte vorbehalten.</p>
   </div>
 
   <!-- App -->

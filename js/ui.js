@@ -4,17 +4,26 @@ const sheet = () => document.getElementById('sheet');
 const backdrop = () => document.getElementById('backdrop');
 
 export function openSheet(html) {
-  sheet().innerHTML = html;
-  sheet().classList.remove('hidden');
-  backdrop().classList.remove('hidden');
-  backdrop().onclick = closeSheet;
-  return sheet();
+  const s = sheet(), b = backdrop();
+  s.classList.remove('closing'); b.classList.remove('closing');
+  s.innerHTML = html;
+  s.classList.remove('hidden');
+  b.classList.remove('hidden');
+  b.onclick = closeSheet;
+  return s;
 }
 
 export function closeSheet() {
-  sheet().classList.add('hidden');
-  backdrop().classList.add('hidden');
-  sheet().innerHTML = '';
+  const s = sheet(), b = backdrop();
+  if (s.classList.contains('hidden')) return;
+  const fertig = () => {
+    s.classList.add('hidden'); b.classList.add('hidden');
+    s.classList.remove('closing'); b.classList.remove('closing');
+    s.innerHTML = '';
+  };
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return fertig();
+  s.classList.add('closing'); b.classList.add('closing');
+  setTimeout(fertig, 290);
 }
 
 export function toast(msg, ms = 2600) {

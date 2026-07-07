@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {
   nettoMinuten, isoWeek, weekDates, weeksInIsoYear, addDays,
-  wochentagIndex, fmtStundenDE, fmtStundenPDF, fmtDatumDE, daysInMonth,
+  wochentagIndex, fmtStundenDE, fmtStundenPDF, fmtStundenKurz, fmtDatumDE, daysInMonth,
 } from '../js/time.js';
 
 // Netto-Vektoren aus den echten Arbeitszeitnachweisen
@@ -48,6 +48,10 @@ assert.equal(wochentagIndex('2026-07-06'), 0); // Montag
 assert.equal(fmtStundenDE(480), '8,00');
 assert.equal(fmtStundenDE(570), '9,50');
 assert.equal(fmtStundenPDF(495), '8.25');
+assert.equal(fmtStundenKurz(480), '8');
+assert.equal(fmtStundenKurz(510), '8,5');
+assert.equal(fmtStundenKurz(495), '8,25');
+assert.equal(fmtStundenKurz(600), '10');
 assert.equal(fmtDatumDE('2026-07-03'), '03.07.2026');
 
 console.log('✓ alle time.js-Tests grün');

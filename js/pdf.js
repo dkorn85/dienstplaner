@@ -27,7 +27,7 @@ export async function buildWeekPdf({ jahr, kw, dates, pflegekraft, sections }) {
     // Titel + Goldlinie + Zeitraum (Zeitraum neu — beugt KW-Verwechslung vor)
     doc.setFont('helvetica', 'bold').setFontSize(16).setTextColor(30, 30, 40);
     doc.text(`Arbeitszeitnachweis (KW ${kw})`, M, y);
-    doc.setDrawColor(217, 131, 36).setLineWidth(0.5);
+    doc.setDrawColor(60, 60, 65).setLineWidth(0.5);
     doc.line(M, y + 2.5, BREITE - M, y + 2.5);
     y += 9;
     doc.setFont('helvetica', 'normal').setFontSize(10).setTextColor(110, 110, 110);
