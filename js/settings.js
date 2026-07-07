@@ -54,6 +54,11 @@ export function renderSettings(el) {
     </div>
 
     <div class="card">
+      <h2>Konto</h2>
+      <label>Neues Passwort (min. 8 Zeichen)
+        <input type="password" id="s-pw" minlength="8" autocomplete="new-password">
+      </label>
+      <button class="btn btn-block" id="s-pw-save" style="margin-bottom:12px">Passwort ändern</button>
       <button class="btn btn-block" id="s-logout">Abmelden</button>
     </div>`;
 
@@ -97,6 +102,15 @@ export function renderSettings(el) {
   if (del) del.onclick = async () => {
     await saveSettings({ signatur: null });
     renderSettings(el);
+  };
+
+  $('#s-pw-save').onclick = async () => {
+    const pw = $('#s-pw').value;
+    if (pw.length < 8) return toast('Mindestens 8 Zeichen');
+    const { error } = await sb.auth.updateUser({ password: pw });
+    if (error) return toast(error.message);
+    $('#s-pw').value = '';
+    toast('Passwort geändert');
   };
 
   $('#s-logout').onclick = async () => {
